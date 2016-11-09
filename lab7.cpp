@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <vector>
+#include <string>
 
 using namespace std;
 void helpFunction(void);
@@ -11,14 +13,17 @@ void helpFunction(void);
 
 class signal{
 	private://hands off, users!
-		int file;
-		int numEl;
-		double* array;//pointer to data
-		double mean;
-		double maxVal;
-		double meanFinder(int,double*);//private method for finding the mean (can only be accessed by objects of this class)
+		
+		//private method for finding the mean (can only be accessed by objects of this class)
 		
 	public:
+		int file;
+		vector<double> data;//pointer to data
+		double mean;
+		double maxVal;
+		double meanFinder(int,vector<double>);
+		int numEl;
+		int i;
 		void save_signal(const char*);//public methods
 		void offset(double);//implemented them all pretty much the same way
 		void scale(double);
@@ -30,42 +35,68 @@ class signal{
 		signal (int);//constructor for a file number being inputted 
 		signal (const char*);//constructor for the file name
 		~signal(void);//destructor
+		double operator+(double);
+		double operator*(double);
 		
 };
-signal::~signal()
-{	
-	delete array;//deletes the array which i allocated in the constructors 
-}
-signal::signal(void)
+double signal::meanFinder(int numEl,vector<double> data)//this is the only private member function. simply calculates the mean of the data sent to it
 {
-	int i =0;
-	char fileString[50];
-	sprintf(fileString,"Raw_data_01.txt");//this is the file that i open by default 
-	FILE* fp = fopen(fileString,"r");//opening file
-	if(fp == NULL)//from this point on, the constructors are identical
-	{
-		cout << "Could not open the file, terminating\n" << endl;
-		return;
-	}
-	fscanf(fp,"%d %lf",&numEl,&maxVal);
-	array = new double[numEl];
-	double* arrStart = array;
+	if(numEl ==0) return 0;
+	double mean;
+	i =0;
+	double total;
 	while(i < numEl)
 	{
-		int temp;
-		fscanf(fp,"%d\n",&temp);
-		*array = temp;
-		array++;
+		total = total + data[i];
 		i++;
 	}
-	array = arrStart;
-	mean = meanFinder(numEl,array);
-	array = arrStart;
+	mean = total / numEl;	
+	return mean;
+}
+signal operator+(signal,signal);
+
+signal operator+(signal sig1, signal sig2){
+	int j = 0;
+	signal sig3(1);
+	if(sig1.numEl != sig2.numEl){ cout << "ERROR" << endl; return sig3;}
+	else{
+		sig3.numEl = sig1.numEl;
+		if(sig1.maxVal > sig2.maxVal) sig3.maxVal = sig1.maxVal;
+		else sig3.maxVal = sig2.maxVal;
+		while(j < sig3.numEl){
+			sig3.data[j] = sig1.data[j] + sig2.data[j];
+			j++;
+		}
+	}
+	sig3.mean = sig3.meanFinder(sig3.numEl,sig3.data);
+	return sig3;
+}
+double signal::operator+(double valueOff){
+	double temp;
+	temp = data[i] + valueOff;
+	return temp;
+}
+double signal::operator*(double valueSca){
+	double temp;
+	temp = data[i] * valueSca;
+	return temp;
+}
+signal::~signal()
+{	
+	//delete data;//deletes the array which i allocated in the constructors 
+}
+signal::signal(void)//changed the dafault constructor to initialize an empty array now... note the methods will not work exactly right with an empty array... but oh well
+{
+	maxVal = 0;
+	numEl = 0;
+	i =0;
+	data.resize(numEl,0);
+	mean = meanFinder(numEl,data);
 }
 signal::signal(const char* fileName)
 {
 	char fileString[50];
-	int i = 0;
+	i = 0;
 	sprintf(fileString,"%s",fileName);
 	FILE* fp = fopen(fileString,"r");
 	if(fp == NULL)
@@ -74,24 +105,20 @@ signal::signal(const char* fileName)
 		return;
 	}
 	fscanf(fp,"%d %lf",&numEl,&maxVal);
-	array = new double[numEl];
-	double* arrStart = array;
+	data.resize(numEl,0);
 	while(i < numEl)
 	{
 		int temp;
 		fscanf(fp,"%d\n",&temp);
-		*array = temp;
-		array++;
+		data[i] = temp;
 		i++;
 	}
-	array = arrStart;
-	mean = meanFinder(numEl,array);
-	array = arrStart;
+	mean = meanFinder(numEl,data);
 }
 signal::signal(int fileNo)
 {
 	char fileString[50];
-	int i =0;
+	i =0;
 	if(fileNo > 10) sprintf(fileString,"Raw_data_%d.txt",fileNo);
 	else sprintf(fileString,"Raw_data_0%d.txt",fileNo);
 	FILE* fp = fopen(fileString,"r");
@@ -101,56 +128,52 @@ signal::signal(int fileNo)
 		return	;
 	}
 	fscanf(fp,"%d %lf",&numEl,&maxVal);
-	array = new double[numEl];
-	double* arrStart = array;
+	data.resize(numEl,0);
 	while(i < numEl)
 	{
 		int temp;
 		fscanf(fp,"%d\n",&temp);
-		*array = temp;
-		array++;
+		data[i] = temp;
 		i++;
 	}
-	array = arrStart;
-	mean = meanFinder(numEl,array);
-	array = arrStart;
+	mean = meanFinder(numEl,data);
 }
 int main (int argc,char* argv[])
 {
 	int explicitFile = 0;//this is a truth value 
 	int fileNo;
 	int fileNum;
-	int i =1;
+	int k =1;
 	char* explicitFileName;
-		while(i < argc)//this loops steps through each command line argument and checks its syntax
+		while(k < argc)//this loops steps through each command line argument and checks its syntax
 				//please note the truth value integers being set once a certain tag has been found
 		{
-			if((argv[i][0] == '-') && (argv[i][1] == 'h'))//checks to see if the help menu is needed, terminates program immediately
+			if((argv[k][0] == '-') && (argv[k][1] == 'h'))//checks to see if the help menu is needed, terminates program immediately
 			{	
 				helpFunction();
 				return 1;
 			}
-			else if((argv[i][0] == '-') && (argv[i][1] == 'f'))
+			else if((argv[k][0] == '-') && (argv[k][1] == 'f'))
 			{
-				if(i >= (argc-1))
+				if(k >= (argc-1))
 				{
 					printf("WARNING: Please be sure to append a file name");
 				}
 				else
 				{
-					i++;
-					if(argv[i][0] == '-')//checks to see if they forgot to append a number before the next tag
+					k++;
+					if(argv[k][0] == '-')//checks to see if they forgot to append a number before the next tag
 					{
 						printf("WARNING: Need a value appended after tag -f\n");
-						i--;
+						k--;
 					}
-					explicitFileName = argv[i];
+					explicitFileName = argv[k];
 					explicitFile = 1;
 				}
 			}	
-			else if((argv[i][0] == '-') && (argv[i][1] == 'n'))//file number tag
+			else if((argv[k][0] == '-') && (argv[k][1] == 'n'))//file number tag
 			{
-				if(i >= (argc-1))//ensures we dont run off the end of the argv[] array
+				if(k >= (argc-1))//ensures we dont run off the end of the argv[] array
 				{
 					printf("WARNING: Please be sure to append a file number\n");
 				}
@@ -160,20 +183,20 @@ int main (int argc,char* argv[])
 				}
 				else
 				{
-					i++;
-					if(argv[i][0] == '-')//checks to see if they forgot to append a number before the next tag
+					k++;
+					if(argv[k][0] == '-')//checks to see if they forgot to append a number before the next tag
 					{
 						printf("WARNING: Need a value appended after tag -n\n");
-						i--;
+						k--;
 					}
-					if(atoi(argv[i]) < 1 || atoi(argv[i]) > 11)//range for valid files
+					if(atoi(argv[k]) < 1 || atoi(argv[k]) > 11)//range for valid files
 					{
 						printf("WARNING: You did not enter a valid file number with your -n tag, program must terminate\n");
 						return 1;//will seg fault if we try to open a data file that dont exist
 					}	
 					else
 					{
-						fileNo = atoi(argv[i]);
+						fileNo = atoi(argv[k]);
 						fileNum = 1;
 						printf("You want to work with file %d\n",fileNo);
 					}
@@ -181,9 +204,9 @@ int main (int argc,char* argv[])
 			}
 			else	//this error check basically says that the program did not find a tag, simply bumps past the argument and gives the user a warning
 			{
-				printf("WARNING: Your argument:\n %s\n has no valid context within the scope of the program, this error will be ignored and the program will continue\n",argv[i]);
+				printf("WARNING: Your argument:\n %s\n has no valid context within the scope of the program, this error will be ignored and the program will continue\n",argv[k]);
 			}
-			i++;
+			k++;
 		}
 
 	if(argc == 1)//IF there were not command line arguments entered by the user 
@@ -209,6 +232,16 @@ int main (int argc,char* argv[])
 		cout << "No constructor was called!\n" << endl;
 		return 1;
 	}
+	
+	signal sig1(1);
+	sig1.display();
+	signal sig2(1);
+	sig2.display();
+	signal sig3 = operator+(sig1,sig2);
+	//sig3.mean = sig3.meanFinder(sig3.numEl,sig3.data);
+	sig3.display();
+	sig3.save_signal("added_signals.txt");
+	return 1;
 }
 void signal::workWithData(signal sig1)//this is the moethod that displays the menu to the user and handles its inputs
 {
@@ -265,78 +298,60 @@ void signal::workWithData(signal sig1)//this is the moethod that displays the me
 }
 void signal::save_signal(const char* fileName)//NOTE: this method does not cause any issues
 {
-	double* start = array;
-	int i =1;
+	i =0;
 	FILE* fp = fopen(fileName,"w");//opens the file that the user wanted 
 	fprintf(fp,"%d\t%lf\n",numEl,maxVal);//prints out the "heading" info
-	while(i <= numEl)
+	while(i < numEl)
 	{
-		fprintf(fp,"%lf\n",*array);//prints each element into the file
-		array++;
+		fprintf(fp,"%lf\n",data[i]);//prints each element into the file
 		i++;
 	}
-	array = start;
 	fclose(fp);
 }
 void signal::center(void)//NOTE: this is one of the methods causing issues 
 {
-	int i = 0;
-	double* start = array;//using this pointer to keep track of the head of the data
+	i = 0;
 	while(i < numEl)
 	{
-		*array = *array - mean;
-		array++;
+		data[i] = data[i] - mean;
 		i++;
 	}
 	maxVal = maxVal - mean;
-	array = start;
-	mean = meanFinder(numEl,array);
-	array = start;
+	mean = meanFinder(numEl,data);
 }
 void signal::normalize(void)//NOTE: another one that IS causing issues
 {
-	int i =0;
-	double* start = array;
+	i =0;
 	while(i < numEl)
 	{
-		*array = *array / maxVal;
-		array++;
+		data[i] = data[i] / maxVal;
 		i++;
 	}
 	maxVal = maxVal / maxVal;
-	array = start;
-	mean = meanFinder(numEl,array);
-	array = start;
+	mean = meanFinder(numEl,data);
 }
 void signal::offset(double offsetVal)//NOTE: another one that IS causing issues
 {
-	int i = 0;
-	double* start = array;
+	i = 0;
+	double temp;
 	maxVal = maxVal + offsetVal;
 	while(i < numEl)
 	{
-		*array = *array + offsetVal;
-		array++;
+		data[i] = operator+(offsetVal);
 		i++;
 	}
-	array = start;
-	mean = meanFinder(numEl,array);
-	array = start;
+	mean = meanFinder(numEl,data);
 }
 void signal::scale(double scaleVal)//NOTE: this one does not cause any issues
 {
-	int i = 0;
-	double* start = array;
+	i = 0;
 	maxVal =  maxVal * scaleVal;
 	while(i < numEl)
 	{
-		*array = *array * scaleVal;
-		array++;
+		data[i] = operator*(scaleVal);
 		i++;
 	}
-	array = start;
-	mean = meanFinder(numEl,array);
-	array = start;
+	mean = meanFinder(numEl,data);
 }
 void signal::display(void)
 {
@@ -347,18 +362,5 @@ void helpFunction(void)//void function to print out a help menu
 	printf("WELCOME!\nHere in lab5.c, we want to make it easy to access and manipulate the information located within these select files!\nTo execute this program correctly, run ./lab4 along with any arguments appended\nEXAMPLE:./lab4 -n 3 -o 5.3\nThe tags must be proceeded by a valid value in which to perform the operation.\n\n\n-n <file_choice>\tSelects the file in which you want to work with, note valid files range from 1 to 11\n-o <offset_value>\tOffsets each value in the file that you have selected, by the offset value proceeding the tag\n-s <scale_value>\tScales each value in the file that you have selected, by the scaling value proceeding the tag\n-S\t\t\tProvides a new file in which you will find the mean value of the data file you have selected, as well as the maximum value present in the file\n-C\t\t\tCenters the signal in the file you have chosen and writes an output file\n-N\t\t\tNormalizes the signal in the file you have chosen and writes an output file\n-r <new_file_name>\tRenames the current file you have chosen, be sure to proceed the tag with the NEW desired name of the file\n-h\t\t\tDisplays this help menu\n\n\n");
 	return;
 }
-double signal::meanFinder(int numEl,double* array)//this is the only private member function. simply calculates the mean of the data sent to it
-{
-	double mean;
-	int i =0;
-	double total;
-	while(i < numEl)
-	{
-		total = total + *array;
-		array++;
-		i++;
-	}
-	mean = total / numEl;	
-	return mean;
-}
+
 	
