@@ -6,7 +6,10 @@
 
 #include <iostream>
 #include <string>
+#include <cctype>
+#include <algorithm>
 
+char changeCase(char c);
 using namespace std;
 
 // Main function. Shows a few examples. Complete the assignments stated in the comments.
@@ -70,10 +73,13 @@ int main()
 // ***********************************************************************
 
 // -----------------------------------------------------------------------
-	/*string line;
+	string line;
 	cout << "\nEnter some text, finish it with an &" << endl;
 	getline(cin, line, '&');
-	cout << line << endl;*/
+	cout << line << endl;
+	transform(line.begin(),line.end(),line.begin(),changeCase);
+	cout << line << endl;
+
 
 // ***********************************************************************
 // Use a "Range for" (Lippman, page 93) and operations in table 3.3 to:
@@ -82,6 +88,11 @@ int main()
 // 2) Replace any whitespace with a dot ('.').
 // Print the converted text.
 // ***********************************************************************
-
+	
 	return 0;
 }
+char changeCase(char c){
+	 if (isupper(c)) return tolower(c); 
+    	 else return toupper(c);
+} 
+

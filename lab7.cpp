@@ -13,9 +13,6 @@ void helpFunction(void);
 
 class signal{
 	private://hands off, users!
-		
-		//private method for finding the mean (can only be accessed by objects of this class)
-		
 	public:
 		int file;
 		vector<double> data;//pointer to data
@@ -53,17 +50,17 @@ double signal::meanFinder(int numEl,vector<double> data)//this is the only priva
 	mean = total / numEl;	
 	return mean;
 }
-signal operator+(signal,signal);
+signal operator+(signal,signal);//function header for the non member operator
 
-signal operator+(signal sig1, signal sig2){
+signal operator+(signal sig1, signal sig2){//heres the non member operator, it combines two signals of the same size (due to the style of our raw data files, the signal will just be doubled
 	int j = 0;
 	signal sig3(1);
-	if(sig1.numEl != sig2.numEl){ cout << "ERROR" << endl; return sig3;}
+	if(sig1.numEl != sig2.numEl){ cout << "ERROR" << endl; return sig3;}//cannot add them if different sizes
 	else{
 		sig3.numEl = sig1.numEl;
-		if(sig1.maxVal > sig2.maxVal) sig3.maxVal = sig1.maxVal;
+		if(sig1.maxVal > sig2.maxVal) sig3.maxVal = sig1.maxVal;//finds the maximum (even though they are the same) 
 		else sig3.maxVal = sig2.maxVal;
-		while(j < sig3.numEl){
+		while(j < sig3.numEl){//adds each element in signal 1 and 2, stores them in signal 3
 			sig3.data[j] = sig1.data[j] + sig2.data[j];
 			j++;
 		}
@@ -71,12 +68,12 @@ signal operator+(signal sig1, signal sig2){
 	sig3.mean = sig3.meanFinder(sig3.numEl,sig3.data);
 	return sig3;
 }
-double signal::operator+(double valueOff){
+double signal::operator+(double valueOff){//the addition member operator (i call this is in the offset method)
 	double temp;
 	temp = data[i] + valueOff;
 	return temp;
 }
-double signal::operator*(double valueSca){
+double signal::operator*(double valueSca){//multiplication member operator (gets called in the scaling method)
 	double temp;
 	temp = data[i] * valueSca;
 	return temp;
@@ -213,32 +210,28 @@ int main (int argc,char* argv[])
 	{
 		signal sig1;//declares and calls using the default constructor
 		sig1.workWithData(sig1);//calls the method that will contunue until program ends
-		return 1;
 	}
 	else if(explicitFile == 1)//IF the user entered a file name to work with
 	{
 		signal sig1(explicitFileName);//calls using one of the parametric constructors 
 		sig1.workWithData(sig1);
-		return 1;
 	}
 	else if(fileNum == 1)//IF the user entered a file number to work with
 	{
 		signal sig1(fileNo);//calls the other parametric constructor
 		sig1.workWithData(sig1);
-		return 1;
 	}
 	else
 	{
 		cout << "No constructor was called!\n" << endl;
-		return 1;
 	}
-	
-	signal sig1(1);
-	sig1.display();
-	signal sig2(1);
-	sig2.display();
-	signal sig3 = operator+(sig1,sig2);
-	//sig3.mean = sig3.meanFinder(sig3.numEl,sig3.data);
+	//*** heres where i use the non member operators, by declaring two new signals (both from the first raw data file since they will be the same length, and then add them together
+	//NOTE THIS PART WILL NOT RUN ON NORMAL EXECUTION, NEED TO COMMENT OUT MOST OF MAIN TO GET IT TO RUN ITS JUST HERE TO DEMONSTRATE
+	signal siga(1);//one operand
+	siga.display();
+	signal sigb(1);//the other
+	sigb.display();
+	signal sig3 = operator+(siga,sigb);//makes the last signal a combination of the other two
 	sig3.display();
 	sig3.save_signal("added_signals.txt");
 	return 1;
