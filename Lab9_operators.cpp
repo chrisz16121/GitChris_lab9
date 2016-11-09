@@ -71,6 +71,7 @@ int main()
 	obj2.a[0] = 10; obj2.a[1] = 20;
 	
 	if(obj1 > obj2)	// normal expression. Which operator is being called?
+			//the normal operator is being called, one which c++ already has defines
 		cout << "\nObject 1 is bigger than object 2" << endl;
 	else
 		cout << "\nObject 1 is not bigger than object 2" << endl;
@@ -82,6 +83,7 @@ int main()
 	
 	
 	if(obj2 > obj1)	// Which operator is being called?
+			//again, the normal operator to be used on arrays in c++
 		cout << "\nObject 2 is bigger than object 1" << endl;
 	else
 		cout << "\nObject 2 is not bigger than object 1" << endl;
@@ -95,30 +97,34 @@ int main()
 	obj1.Printvals();
 	obj2.Printvals();
 	
-	obj1 + obj2;	// normal expression. Which operator is being called?
-	// obj1.operator+(obj2);	// equivalent, try it out
+	//obj1 + obj2;	// normal expression. Which operator is being called?
+	 obj1.operator+(obj2);	// equivalent, try it out
 	obj1.Printvals();
 	obj2.Printvals();
 	
-	obj2 + obj1;	// normal expression. Which operator is being called?
-	// obj2.operator+(obj1);	// equivalent, try it out
+	//obj2 + obj1;	// normal expression. Which operator is being called?
+	 obj2.operator+(obj1);	// equivalent, try it out
 	obj1.Printvals();
 	obj2.Printvals();
 
 	cout << "------------------------------------------------------------------" << endl;
 	obj1*2;		// Would 2*obj1 work? Give it a try.
+	//2*obj1;	//no, it does not work, no operator defined to do this (types dont match up)
 	obj2*f;		// Would f*obj2 work? Give it a try.
+	//f*obj2;	//no, it does not work either
 	obj1.Printvals();
 	obj2.Printvals();
 	
 	cout << "------------------------------------------------------------------" << endl;
 	// Which operator is being called next?
 	obj3 = operator+(obj1, obj2);	// Would  obj3 = obj2 + obj1; work?
+	// (operator+)obj3 = obj2 + obj1;
 	obj1.Printvals();				// If not, how could you make it work?
 	obj2.Printvals();
 	obj3.Printvals();
 	
 	obj3 = operator+(obj2, obj1);	// is this the same as before?
+					//it will provide the same results, however it is not the same operation, as the input arguments are different
 	obj1.Printvals();
 	obj2.Printvals();
 	obj3.Printvals();
